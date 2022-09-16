@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AspnetRunBasics.Data;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,10 +11,10 @@ namespace AspnetRunBasics
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
-            SeedDatabase(host);
+            await SeedDatabase(host);
             host.Run();
         }
 
@@ -27,7 +25,7 @@ namespace AspnetRunBasics
                     webBuilder.UseStartup<Startup>();
                 });
 
-        private static void SeedDatabase(IHost host)
+        private static async Task SeedDatabase(IHost host)
         {
             using (var scope = host.Services.CreateScope())
             {
@@ -36,8 +34,11 @@ namespace AspnetRunBasics
 
                 try
                 {
-                    var aspnetRunContext = services.GetRequiredService<AspnetRunContext>();
-                    AspnetRunContextSeed.SeedAsync(aspnetRunContext, loggerFactory).Wait();
+                    var context = services.GetRequiredService<AspnetRunContext>();
+
+                    await context.Database.MigrateAsync();
+
+                    AspnetRunContextSeed.SeedAsync(context, loggerFactory).Wait();
                 }
                 catch (Exception exception)
                 {
