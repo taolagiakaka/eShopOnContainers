@@ -1,21 +1,13 @@
-using System;
-using System.Threading.Tasks;
-using AspnetRunBasics.Data;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace AspnetRunBasics
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            var host = CreateHostBuilder(args).Build();
-            await SeedDatabase(host);
-            host.Run();
+            CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -24,28 +16,5 @@ namespace AspnetRunBasics
                 {
                     webBuilder.UseStartup<Startup>();
                 });
-
-        private static async Task SeedDatabase(IHost host)
-        {
-            using (var scope = host.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-
-                try
-                {
-                    var context = services.GetRequiredService<AspnetRunContext>();
-
-                    await context.Database.MigrateAsync();
-
-                    AspnetRunContextSeed.SeedAsync(context, loggerFactory).Wait();
-                }
-                catch (Exception exception)
-                {
-                    var logger = loggerFactory.CreateLogger<Program>();
-                    logger.LogError(exception, "An error occurred seeding the DB.");
-                }
-            }
-        }
     }
 }
